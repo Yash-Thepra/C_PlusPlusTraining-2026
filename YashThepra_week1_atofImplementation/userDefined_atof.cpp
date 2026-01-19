@@ -1,81 +1,123 @@
-#include<iostream>
+#include <iostream>
+#include<cmath>
 
-void trimLeadingAndTrailingSpaces(std::string &inputString) {
+void trimLeadingAndTrailingSpaces(std::string &inputString)
+{
     int startIndex = 0;
 
-    while(startIndex < inputString.length() && inputString[startIndex] == ' ') {
+    while (startIndex < inputString.length() && inputString[startIndex] == ' ')
+    {
         startIndex++;
     }
 
     int endIndex = inputString.length() - 1;
 
-    while(endIndex >= 0 && inputString[endIndex] == ' ') {
+    while (endIndex >= 0 && inputString[endIndex] == ' ')
+    {
         endIndex--;
     }
 
     int newIndex = 0;
-    while (startIndex <= endIndex) {
+    while (startIndex <= endIndex)
+    {
         inputString[newIndex++] = inputString[startIndex++];
     }
     inputString.resize(newIndex);
 }
 
-bool isValidInput(std::string inputString) {
-    if (inputString.length() == 0 || inputString[inputString.length() - 1] == '.' || inputString[0] == '0') {
-        return 0;
+void handlesExponentCase(std::string inputString, double &result, int index) 
+{
+    index++;
+    bool isExponentNegative = false;
+    if (index < inputString.length() && inputString[index] == '+') 
+    {
+        index++;
     }
-    
-    int decimalCount = 0;
-    for(int index = 0; index < inputString.length(); index++) {
-        if (((inputString[index] < '0' || inputString[index] > '9') && inputString[index] != '.') || decimalCount > 1 ) {
-            return 0;
-        }
-
-        if (inputString[index] == '.') {
-            decimalCount++;
-        }
+    else if (index < inputString.length() && inputString[index] == '-') 
+    { 
+        isExponentNegative = true; 
+        index++; 
     }
-    return 1;
+    int exponent = 0;
+    bool hasDigits = false;
+    while (index < inputString.length() && isdigit(inputString[index]))
+    {
+        exponent = exponent * 10 + (inputString[index] - '0');
+        hasDigits = true;
+        index++;
+    }
+    if (hasDigits)
+    {
+        if (isExponentNegative) 
+        {
+            exponent = -exponent;
+        }
+        result *= std::pow(10, exponent);
+    }
 }
-
-double convertStringToDouble(std::string inputString) {
-    double floatingPointNumber = 0.0;
-    bool flagForFractionCheck = 0;
-    double decimalFactor = 0.1;
-
-    for(int index = 0; index < inputString.length(); index++) {
-        if (inputString[index] == '.') {
-            flagForFractionCheck = 1;
-        }
-        else {
-            int number = inputString[index] - '0';
-            if (!flagForFractionCheck) {
-                floatingPointNumber = (10 * floatingPointNumber) + number;
+double convertStringToDouble(std::string inputString)
+{
+    if (inputString.empty())
+    {
+        return 0.0;
+    }
+    int index = 0;
+    bool isNegative = false, fractionPart = false;
+    double result = 0.0, decimalFactor = 0.1;
+    if (inputString[index] == '+')
+    {
+        index++;
+    }
+    else if (inputString[index] == '-')
+    {
+        isNegative = true;
+        index++;
+    }
+    while (index < inputString.length() && (isdigit(inputString[index]) || inputString[index] == '.'))
+    {
+        if (inputString[index] == '.')
+        {
+            if (fractionPart)
+            {
+                break;
             }
-            else {
-                floatingPointNumber += number * decimalFactor;
+            fractionPart = true;
+        }
+        else
+        {
+            int digit = inputString[index] - '0';
+            if (!fractionPart)
+            {
+                result = result * 10 + digit;
+            }
+            else
+            {
+                result += digit * decimalFactor;
                 decimalFactor /= 10;
             }
         }
+        index++;
     }
-    return floatingPointNumber;
+    if (index < inputString.size() && (inputString[index] == 'e' || inputString[index] == 'E'))
+    {
+        handlesExponentCase(inputString, result, index);
+    }
+    if (isNegative)
+    {
+        result = -result;
+    }
+    return result;
 }
 
-int main() {
+int main()
+{
     std::string floatingPointNumber;
     std::cout << "Please Enter the the floating point Number in the string form which is to be converted into double: ";
-
-    while(1) {
-        getline(std::cin, floatingPointNumber);
-
-        trimLeadingAndTrailingSpaces(floatingPointNumber);
-        if (isValidInput(floatingPointNumber)) break;
-        else {
-            std::cout << "\nInvalid Input! Try Again: ";
-        }
-    }
-
+    trimLeadingAndTrailingSpaces(floatingPointNumber);
+    getline(std::cin, floatingPointNumber);
+    const std::string demo = floatingPointNumber;
     double resultAfterConversion = convertStringToDouble(floatingPointNumber);
     std::cout << "String of size(" << sizeof(floatingPointNumber) << ") converted to double: " << resultAfterConversion << " of Size(" << sizeof(resultAfterConversion) << ").";
+    std::cout << "\n" << atof(floatingPointNumber.c_str());
     return 0;
 }
