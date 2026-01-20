@@ -1,5 +1,5 @@
 #include <iostream>
-#include<cmath>
+#include <cmath>
 
 void trimLeadingAndTrailingSpaces(std::string &inputString)
 {
@@ -55,7 +55,7 @@ void handlesExponentCase(std::string inputString, double &result, int index)
         result *= std::pow(10, exponent);
     }
 }
-double convertStringToDouble(std::string inputString)
+double convertStringToDouble(const std::string inputString)
 {
     if (inputString.empty())
     {
@@ -111,13 +111,11 @@ double convertStringToDouble(std::string inputString)
 
 int main()
 {
-    std::string floatingPointNumber;
+    std::string doubleNumber;
     std::cout << "Please Enter the the floating point Number in the string form which is to be converted into double: ";
-    trimLeadingAndTrailingSpaces(floatingPointNumber);
-    getline(std::cin, floatingPointNumber);
-    const std::string demo = floatingPointNumber;
-    double resultAfterConversion = convertStringToDouble(floatingPointNumber);
-    std::cout << "String of size(" << sizeof(floatingPointNumber) << ") converted to double: " << resultAfterConversion << " of Size(" << sizeof(resultAfterConversion) << ").";
-    std::cout << "\n" << atof(floatingPointNumber.c_str());
+    trimLeadingAndTrailingSpaces(doubleNumber);
+    getline(std::cin, doubleNumber);
+    
+    std::cout << convertStringToDouble(doubleNumber);
     return 0;
 }
