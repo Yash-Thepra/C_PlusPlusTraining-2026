@@ -113,9 +113,8 @@ int main()
 {
     std::string doubleNumber;
     std::cout << "Please Enter the the floating point Number in the string form which is to be converted into double: ";
-    trimLeadingAndTrailingSpaces(doubleNumber);
     getline(std::cin, doubleNumber);
-    
+    trimLeadingAndTrailingSpaces(doubleNumber);
     std::cout << convertStringToDouble(doubleNumber);
     return 0;
 }
