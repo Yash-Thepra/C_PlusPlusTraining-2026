@@ -1,0 +1,12 @@
+# Build directories
+obj/
+bin/
+lib/
+
+# Compiled artifacts
+*.o
+*.so
+*.exe
+*.a
+
+
