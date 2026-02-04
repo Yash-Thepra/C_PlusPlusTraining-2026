@@ -1,39 +1,58 @@
 #include <iostream>
 #include <dlfcn.h>
 #include "input.h"
+#include "operation.h"
+
 
 using function = double (*)(double, double);
+using divide_func = bool (*)(double, double, double &);
 
-void performOperation(int choice, double firstNumber, double secondNumber,
-                      function add, function subtract, function multiply, function divide)
+void performOperation(Operation choice,
+                      double firstNumber,
+                      double secondNumber,
+                      function add,
+                      function subtract,
+                      function multiply,
+                      divide_func divide)
 {
+    double result;
+
     switch (choice)
     {
-    case 1:
+    case ADD:
         std::cout << add(firstNumber, secondNumber);
         break;
-    case 2:
+
+    case SUBTRACT:
         std::cout << subtract(firstNumber, secondNumber);
         break;
-    case 3:
+
+    case MULTIPLY:
         std::cout << multiply(firstNumber, secondNumber);
         break;
-    case 4:
-        std::cout << divide(firstNumber, secondNumber);
+
+    case DIVIDE:
+        if (!divide(firstNumber, secondNumber, result))
+        {
+           std::cout << "Can't divide by zero!\n";
+           return;
+        }
+        std::cout << result;
         break;
     }
 }
 
+
 int main()
 {
-    void *handle = dlopen("./libmathops.so", RTLD_LAZY);
+    void *handle = dlopen("./lib/libmathops.so", RTLD_LAZY);
     if (!handle)
         return 1;
 
-    function add = (function)dlsym(handle, "add");
-    function subtract = (function)dlsym(handle, "sub");
-    function multiply = (function)dlsym(handle, "mul");
-    function divide = (function)dlsym(handle, "divide");
+    function add = (function)dlsym(handle, "addTwoNumbers");
+    function subtract = (function)dlsym(handle, "subtractTwoNumbers");
+    function multiply = (function)dlsym(handle, "multiplyTwoNumbers");
+    divide_func divide = (divide_func)dlsym(handle, "divideTwoNumbers");
 
     double firstNumber, secondNumber;
     int choice;
@@ -47,7 +66,7 @@ int main()
     std::cout << "1.Add  2.Sub  3.Mul  4.Div\nChoice: ";
     choice = getValidChoice();
 
-    performOperation(choice, firstNumber, secondNumber, add, subtract, multiply, divide);
+    performOperation(static_cast<Operation>(choice), firstNumber, secondNumber, add, subtract, multiply, divide);
 
     dlclose(handle);
     return 0;

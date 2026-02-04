@@ -1,6 +1,6 @@
-#include "../include/add.h"
+#include "add.h"
 
-double addTwoNumbers(double firstNumber, double secondNumber)
+double addTwoNumbers(const double firstNumber, const double secondNumber)
 {
     return firstNumber + secondNumber;
 }

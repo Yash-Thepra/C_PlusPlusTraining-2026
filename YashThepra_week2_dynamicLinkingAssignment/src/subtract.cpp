@@ -1,6 +1,6 @@
-#include "../include/subtract.h"
+#include "subtract.h"
 
-double subtractTwoNumbers(double firstNumber, double secondNumber)
+double subtractTwoNumbers(const double firstNumber, const double secondNumber)
 {
     return firstNumber - secondNumber;
 }

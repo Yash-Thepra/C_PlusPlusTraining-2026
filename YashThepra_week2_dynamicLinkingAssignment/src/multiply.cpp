@@ -1,6 +1,6 @@
-#include "../include/multiply.h"
+#include "multiply.h"
 
-double multiplyTwoNumbers(double firstNumber, double secondNumber)
+double multiplyTwoNumbers(const double firstNumber, const double secondNumber)
 {
     return firstNumber * secondNumber;
 }

@@ -1,12 +1,13 @@
-#include "../include/divide.h"
+#include "divide.h"
 
-double divideTwoNumbers(double firstNumber, double secondNumber, bool &flag)
+bool divideTwoNumbers(const double firstNumber, const double secondNumber, double &result)
 {
     if (secondNumber == 0)
     {
-        flag = false;
-        return -1;
+        return false;
     }
 
-    return firstNumber / secondNumber;
+    result = firstNumber / secondNumber;
+    return true;
 }
+

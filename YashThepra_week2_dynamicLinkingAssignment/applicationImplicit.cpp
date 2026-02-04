@@ -1,35 +1,41 @@
 #include <iostream>
 
-#include "../include/add.h"
-#include "../include/subtract.h"
-#include "../include/multiply.h"
-#include "../include/divide.h"
-#include "../include/input.h"
+#include "add.h"
+#include "subtract.h"
+#include "multiply.h"
+#include "divide.h"
+#include "input.h"
+#include "operation.h"
 
-void performOperation(double firstNumber, double secondNumber, int choice)
+void performOperation(double firstNumber, double secondNumber, Operation choice)
 {
-    bool flag = true;
+    double result;
+
     switch (choice)
     {
-    case 1:
+    case ADD:
         std::cout << addTwoNumbers(firstNumber, secondNumber);
         break;
-    case 2:
+
+    case SUBTRACT:
         std::cout << subtractTwoNumbers(firstNumber, secondNumber);
         break;
-    case 3:
+
+    case MULTIPLY:
         std::cout << multiplyTwoNumbers(firstNumber, secondNumber);
         break;
-    case 4:
-        if (!flag)
+
+    case DIVIDE:
+        if (!divideTwoNumbers(firstNumber, secondNumber, result))
         {
-            std::cout << "Can't divide by Zero!\n";
+            std::cout << "Can't divide by zero!\n";
             return;
         }
-        std::cout << divideTwoNumbers(firstNumber, secondNumber, flag);        
+        std::cout << result;
         break;
     }
 }
+
 int main()
 {
     double firstNumber, secondNumber;
@@ -43,7 +49,7 @@ int main()
 
     std::cout << "1.Add  2.Sub  3.Mul  4.Div\nChoice: ";
     choice = getValidChoice();
-    performOperation(firstNumber, secondNumber, choice);
+    performOperation(firstNumber, secondNumber, static_cast<Operation>(choice));
 
     return 0;
 }
