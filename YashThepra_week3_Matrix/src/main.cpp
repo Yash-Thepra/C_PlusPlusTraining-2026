@@ -11,13 +11,21 @@ int main()
     std::cout << "Please follow the below instructions:\n1. Press 1 for Addition\n2. Press 2 for Multiplication\nEnter: ";
     Operation operationChoice = getValidChoice();
 
-    if (operationChoice == ADDITION )
+    if (operationChoice == ADDITION)
     {
         int numberOfRows, numberOfColumns;
-        std::cout << "\nEnter Number Of Rows(single time) since dimension of both matrix are same for addition: ";
-        numberOfRows = getValidInteger();
-        std::cout << "\nEnter Number Of columns(single time) since dimension of both matrix are same for addition: ";
-        numberOfColumns = getValidInteger();
+        while (true)
+        {
+            std::cout << "\nEnter Number Of Rows(single time) since dimension of both matrix are same for addition: ";
+            numberOfRows = getValidInteger();
+            std::cout << "\nEnter Number Of columns(single time) since dimension of both matrix are same for addition: ";
+            numberOfColumns = getValidInteger();
+            if (numberOfColumns != 0 && numberOfRows)
+            {
+                break;
+            }
+            std::cout << "\nInvalid Input! Please try again.\n";
+        }
         Matrix matrixFirst = createMatrix(numberOfRows, numberOfColumns);
         Matrix matrixSecond = createMatrix(numberOfRows, numberOfColumns);
         std::cout << "\nEnter values of first Matrix:\n";
@@ -25,7 +33,7 @@ int main()
         std::cout << "Enter values of second Matrix:\n";
         fillMatrix(matrixSecond);
         Matrix result = addTwoMatrices(matrixFirst, matrixSecond);
-        std::cout << "Result: ";
+        std::cout << "Result:\n";
         displayMatrix(result);
         freeMatrix(matrixFirst);
         freeMatrix(matrixSecond);
@@ -38,13 +46,13 @@ int main()
         {
             std::cout << "Enter Number of rows for Matrix First: ";
             numberOfRowsMatrixFirst = getValidInteger();
-            std::cout << "\nEnter Number Of columns for Matrix second: ";
+            std::cout << "\nEnter Number Of columns for Matrix first: ";
             numberOfColumnsMatrixFirst = getValidInteger();
             std::cout << "\nEnter Number of rows for Matrix Second: ";
             numberOfRowsMatrixSecond = getValidInteger();
             std::cout << "\nEnter Number of Columns for Matrix Second: ";
             numberOfColumnsMatrixSecond = getValidInteger();
-            if (numberOfColumnsMatrixFirst == numberOfRowsMatrixSecond)
+            if (numberOfColumnsMatrixFirst == numberOfRowsMatrixSecond && numberOfRowsMatrixFirst != 0 && numberOfColumnsMatrixFirst != 0 && numberOfRowsMatrixSecond != 0 && numberOfColumnsMatrixSecond != 0)
             {
                 break;
             }
@@ -58,7 +66,7 @@ int main()
         std::cout << "\nEnter values of Matrix second:\n";
         fillMatrix(matrixSecond);
         Matrix resultantMatrix = multiplyTwoMatrices(matrixFirst, matrixSecond);
-        std::cout << "Result: ";
+        std::cout << "Result:\n";
         displayMatrix(resultantMatrix);
         freeMatrix(matrixFirst);
         freeMatrix(matrixSecond);
