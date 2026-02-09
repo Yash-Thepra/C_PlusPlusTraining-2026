@@ -1,5 +1,4 @@
-#ifndef MULTIPLY_H
-#define MULTIPLY_H
+#pragma once
+
 #include "matrix.h"
 Matrix multiplyTwoMatrices(const Matrix &firstMatrix, const Matrix &secondMatrix);
-#endif

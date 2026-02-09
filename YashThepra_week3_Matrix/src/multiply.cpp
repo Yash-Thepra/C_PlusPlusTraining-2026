@@ -1,17 +1,18 @@
 #include "multiply.h"
+
 Matrix multiplyTwoMatrices(const Matrix &firstMatrix, const Matrix &secondMatrix)
 {
-    Matrix resultantMatrix = createMatrix(firstMatrix.numberOfRows, secondMatrix.numberOfColumns);
-    for (int rowIndex = 0; rowIndex < firstMatrix.numberOfRows; rowIndex++)
+    Matrix resultantMatrix = createMatrix(secondMatrix.numberOfColumns, firstMatrix.numberOfRows);
+    for (int row = 0; row < firstMatrix.numberOfRows; row++)
     {
-        for (int columnIndex = 0; columnIndex < secondMatrix.numberOfColumns; columnIndex++)
+        for (int column = 0; column < secondMatrix.numberOfColumns; column++)
         {
-            double sumOfSingleCell = 0;
+            double sum = 0;
             for (int index = 0; index < firstMatrix.numberOfColumns; index++)
             {
-                sumOfSingleCell += firstMatrix.values[rowIndex][index] * secondMatrix.values[index][columnIndex];
+                sum += firstMatrix.values[row][index] * secondMatrix.values[index][column];
             }
-            resultantMatrix.values[rowIndex][columnIndex] = sumOfSingleCell;
+            resultantMatrix.values[row][column] = sum;
         }
     }
     return resultantMatrix;

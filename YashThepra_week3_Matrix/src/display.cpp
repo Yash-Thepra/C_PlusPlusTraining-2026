@@ -1,12 +1,14 @@
 #include <iostream>
+
 #include "display.h"
+
 void displayMatrix(const Matrix &matrix)
 {
-    for (int rowIndex = 0; rowIndex < matrix.numberOfRows; rowIndex++)
+    for (int row = 0; row < matrix.numberOfRows; row++)
     {
-        for (int columnIndex = 0; columnIndex < matrix.numberOfColumns; columnIndex++)
+        for (int column = 0; column < matrix.numberOfColumns; column++)
         {
-            std::cout << matrix.values[rowIndex][columnIndex] << " ";
+            std::cout << "Result(" << row << "," << column << "): " << matrix.values[row][column] << "    ";
         }
         std::cout << "\n";
     }

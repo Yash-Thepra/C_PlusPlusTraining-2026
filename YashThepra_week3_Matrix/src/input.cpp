@@ -1,6 +1,6 @@
 #include <iostream>
+
 #include "input.h"
-#include "operation.h"
 
 void trimLeadingAndTrailingSpaces(std::string &inputString)
 {
@@ -28,6 +28,7 @@ Operation getValidChoice()
     while (true)
     {
         std::getline(std::cin, inputString);
+
         trimLeadingAndTrailingSpaces(inputString);
 
         if (inputString.length() == 1 &&
@@ -47,12 +48,39 @@ Operation getValidChoice()
     }
 }
 
+ProgramEnd getValidPreference()
+{
+    std::string inputString;
+    while (true)
+    {
+        std::getline(std::cin, inputString);
+
+        trimLeadingAndTrailingSpaces(inputString);
+
+        if (inputString.length() == 1 &&
+            inputString[0] >= '1' && inputString[0] <= '2')
+        {
+            int digit = inputString[0] - '0';
+            if (digit == 1)
+            {
+                return CONTINUE;
+            }
+            else
+            {
+                return EXIT;
+            }
+        }
+        std::cout << "\nInvalid choice, Enter 1 to continue and 2 for exit: ";
+    }
+}
+
 double getValidDouble()
 {
     std::string inputString;
     while (true)
     {
         std::getline(std::cin, inputString);
+
         trimLeadingAndTrailingSpaces(inputString);
 
         bool flag = true;
@@ -119,6 +147,7 @@ int getValidInteger()
     while (true)
     {
         std::getline(std::cin, inputString);
+
         trimLeadingAndTrailingSpaces(inputString);
         int index = 0;
         bool flag = true;
@@ -148,11 +177,12 @@ int getValidInteger()
 
 void fillMatrix(Matrix &matrix)
 {
-    for (int rowIndex = 0; rowIndex < matrix.numberOfRows; rowIndex++)
+    for (int row = 0; row < matrix.numberOfRows; row++)
     {
-        for (int columnIndex = 0; columnIndex < matrix.numberOfColumns; columnIndex++)
+        for (int column = 0; column < matrix.numberOfColumns; column++)
         {
-            matrix.values[rowIndex][columnIndex] = getValidDouble();
+            std::cout << "\nEnter Value for cell(" << row << "," << column << "): ";
+            matrix.values[row][column] = getValidDouble();
         }
     }
 }

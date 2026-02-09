@@ -1,12 +1,12 @@
 #include "matrix.h"
 
-Matrix createMatrix(const int numberOfRows, const int numberOfColumns)
+Matrix createMatrix(const int& numberOfColumns, const int& numberOfRows)
 {
     Matrix matrix;
     matrix.numberOfRows = numberOfRows;
     matrix.numberOfColumns = numberOfColumns;
 
-    matrix.values = new double *[numberOfColumns];
+    matrix.values = new double *[numberOfRows];
     for (int index = 0; index < numberOfRows; index++)
     {
         matrix.values[index] = new double[numberOfColumns];
@@ -22,6 +22,5 @@ void freeMatrix(Matrix &matrix)
         delete[] matrix.values[index];
     }
     delete[] matrix.values;
-
     matrix.values = nullptr;
 }

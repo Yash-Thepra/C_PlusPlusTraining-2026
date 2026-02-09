@@ -1,9 +1,10 @@
-#ifndef INPUT_H
-#define INPUT_H
+#pragma once
+
 #include "matrix.h"
-#include "operation.h"
+
 double getValidDouble();
 int getValidInteger();
 Operation getValidChoice();
+ProgramEnd getValidPreference();
+
 void fillMatrix(Matrix &Matrix);
-#endif
