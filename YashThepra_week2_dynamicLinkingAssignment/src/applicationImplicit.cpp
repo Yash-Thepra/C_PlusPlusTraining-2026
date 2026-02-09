@@ -1,13 +1,12 @@
 #include <iostream>
-
 #include "add.h"
-#include "subtract.h"
-#include "multiply.h"
 #include "divide.h"
 #include "input.h"
+#include "multiply.h"
 #include "operation.h"
+#include "subtract.h"
 
-void performOperation(double firstNumber, double secondNumber, Operation choice)
+void performOperation(const double firstNumber,const double secondNumber,const Operation choice)
 {
     double result;
 
@@ -29,10 +28,14 @@ void performOperation(double firstNumber, double secondNumber, Operation choice)
         if (!divideTwoNumbers(firstNumber, secondNumber, result))
         {
             std::cout << "Can't divide by zero!\n";
-            return;
         }
-        std::cout << result;
+        else 
+        {
+            std::cout << result;
+        }
         break;
+    default:
+        std::cout << "Invalid Choice!\n";
     }
 }
 

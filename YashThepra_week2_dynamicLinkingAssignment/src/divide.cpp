@@ -2,12 +2,11 @@
 
 bool divideTwoNumbers(const double firstNumber, const double secondNumber, double &result)
 {
-    if (secondNumber == 0)
+    bool divideResult = false;
+    if (secondNumber != 0)
     {
-        return false;
+        result = firstNumber / secondNumber;
+        bool divideResult = true;
     }
-
-    result = firstNumber / secondNumber;
-    return true;
+    return divideResult;
 }
-

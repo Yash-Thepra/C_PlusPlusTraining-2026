@@ -1,7 +1,7 @@
-#include "input.h"
+#include <cctype>
 #include <iostream>
 #include <string>
-#include <cctype>
+#include "input.h"
 
 void trimLeadingAndTrailingSpaces(std::string &inputString)
 {
@@ -78,8 +78,9 @@ double getValidDouble()
             }
         }
         if (inputString[0] == '-')
+        {
             result = -result;
-
+        }
         return result;
     }
 }

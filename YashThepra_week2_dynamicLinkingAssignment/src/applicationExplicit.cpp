@@ -1,15 +1,14 @@
-#include <iostream>
 #include <dlfcn.h>
+#include <iostream>
 #include "input.h"
 #include "operation.h"
-
 
 using function = double (*)(double, double);
 using divide_func = bool (*)(double, double, double &);
 
-void performOperation(Operation choice,
-                      double firstNumber,
-                      double secondNumber,
+void performOperation(const Operation choice,
+                      const double firstNumber,
+                      const double secondNumber,
                       function add,
                       function subtract,
                       function multiply,
@@ -35,10 +34,13 @@ void performOperation(Operation choice,
         if (!divide(firstNumber, secondNumber, result))
         {
            std::cout << "Can't divide by zero!\n";
-           return;
+           return; 
         }
         std::cout << result;
         break;
+
+    default:
+        std::cout << "Invalid Choice!\n";
     }
 }
 
@@ -47,8 +49,9 @@ int main()
 {
     void *handle = dlopen("./lib/libmathops.so", RTLD_LAZY);
     if (!handle)
+    {
         return 1;
-
+    }
     function add = (function)dlsym(handle, "addTwoNumbers");
     function subtract = (function)dlsym(handle, "subtractTwoNumbers");
     function multiply = (function)dlsym(handle, "multiplyTwoNumbers");
