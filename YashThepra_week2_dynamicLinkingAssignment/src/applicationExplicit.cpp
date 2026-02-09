@@ -34,9 +34,11 @@ void performOperation(const Operation choice,
         if (!divide(firstNumber, secondNumber, result))
         {
            std::cout << "Can't divide by zero!\n";
-           return; 
         }
-        std::cout << result;
+        else 
+        {
+            std::cout << result;
+        }
         break;
 
     default:
