@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "input.h"
-#include "matrix.h"
+#include "Input.h"
+#include "Matrix.h"
 
 void Matrix::allocateMemory()
 {
@@ -37,7 +37,6 @@ Matrix::Matrix(const Matrix &other)
     : numberOfRows(other.numberOfRows), numberOfColumns(other.numberOfColumns)
 {
     allocateMemory();
-
     for (int row = 0; row < numberOfRows; row++)
     {
         for (int column = 0; column < numberOfColumns; column++)
@@ -49,53 +48,20 @@ Matrix::Matrix(const Matrix &other)
 
 Matrix &Matrix::operator=(const Matrix &other)
 {
-    if (this == &other)
+    if (this != &other)
     {
-        return *this;
-    }
-    freeMemory();
-
-    numberOfRows = other.numberOfRows;
-    numberOfColumns = other.numberOfColumns;
-
-    allocateMemory();
-
-    for (int row = 0; row < numberOfRows; row++)
-    {
-        for (int column = 0; column < numberOfColumns; column++)
+        freeMemory();
+        numberOfRows = other.numberOfRows;
+        numberOfColumns = other.numberOfColumns;
+        allocateMemory();
+        for (int row = 0; row < numberOfRows; row++)
         {
-            values[row][column] = other.values[row][column];
+            for (int column = 0; column < numberOfColumns; column++)
+            {
+                values[row][column] = other.values[row][column];
+            }
         }
     }
-    return *this;
-}
-
-Matrix::Matrix(Matrix &&other) noexcept
-    : numberOfRows(other.numberOfRows),
-      numberOfColumns(other.numberOfColumns),
-      values(other.values)
-{
-    other.values = nullptr;
-    other.numberOfRows = 0;
-    other.numberOfColumns = 0;
-}
-
-Matrix &Matrix::operator=(Matrix &&other) noexcept
-{
-    if (this == &other)
-    {
-        return *this;
-    }
-    freeMemory();
-
-    numberOfRows = other.numberOfRows;
-    numberOfColumns = other.numberOfColumns;
-    values = other.values;
-
-    other.values = nullptr;
-    other.numberOfRows = 0;
-    other.numberOfColumns = 0;
-
     return *this;
 }
 
@@ -106,27 +72,14 @@ void Matrix::fillMatrix()
         for (int column = 0; column < numberOfColumns; column++)
         {
             std::cout << "\nEnter Value for cell(" << row << "," << column << "): ";
-            values[row][column] = Input::getValidDouble();
+            values[row][column] = Input::readValidDouble();
         }
-    }
-}
-
-void Matrix::displayMatrix() const
-{
-    for (int row = 0; row < numberOfRows; row++)
-    {
-        for (int column = 0; column < numberOfColumns; column++)
-        {
-            std::cout << "Result(" << row << "," << column << "): " << values[row][column] << "    ";
-        }
-        std::cout << "\n";
     }
 }
 
 Matrix Matrix::operator+(const Matrix &secondMatrix) const
 {
     Matrix resultantMatrix(numberOfColumns, numberOfRows);
-
     for (int row = 0; row < numberOfRows; row++)
     {
         for (int column = 0; column < numberOfColumns; column++)
@@ -140,7 +93,6 @@ Matrix Matrix::operator+(const Matrix &secondMatrix) const
 Matrix Matrix::operator*(const Matrix &secondMatrix) const
 {
     Matrix resultantMatrix(secondMatrix.numberOfColumns, numberOfRows);
-
     for (int row = 0; row < numberOfRows; row++)
     {
         for (int column = 0; column < secondMatrix.numberOfColumns; column++)
@@ -156,12 +108,17 @@ Matrix Matrix::operator*(const Matrix &secondMatrix) const
     return resultantMatrix;
 }
 
-int Matrix::getRows() const
+int Matrix::getMatrixColumns() const
+{
+    return numberOfColumns;
+}
+
+int Matrix::getMatrixRows() const
 {
     return numberOfRows;
 }
 
-int Matrix::getColumns() const
+double Matrix::getMatrixValue(const int& rowIndex, const int& columnIndex) const
 {
-    return numberOfColumns;
+    return values[rowIndex][columnIndex];
 }
