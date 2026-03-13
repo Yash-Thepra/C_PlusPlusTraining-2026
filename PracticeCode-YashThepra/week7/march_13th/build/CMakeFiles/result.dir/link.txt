@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/result.dir/p6.cpp.o -o result  -lgtest -lgtest_main -lpthread 
