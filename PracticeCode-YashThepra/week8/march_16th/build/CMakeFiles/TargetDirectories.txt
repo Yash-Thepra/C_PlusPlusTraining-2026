@@ -1,0 +1,3 @@
+/home/yashthepra/C_PlusPlusTraining-2026/PracticeCode-YashThepra/week8/march_16th/build/CMakeFiles/result.dir
+/home/yashthepra/C_PlusPlusTraining-2026/PracticeCode-YashThepra/week8/march_16th/build/CMakeFiles/edit_cache.dir
+/home/yashthepra/C_PlusPlusTraining-2026/PracticeCode-YashThepra/week8/march_16th/build/CMakeFiles/rebuild_cache.dir
