@@ -1,12 +1,13 @@
 #include <iostream>
 
+/*
 std::pair getPair()
 {
     std::pair<int, int> temp;
     temp.first = 1;
     temp.second = 2;
     return temp;
-}
+}*/
 
 int main()
 {
@@ -16,6 +17,6 @@ int main()
     std::cout << p.first << " " << p.second << "\n";
 
     //can also get by return 
-    p = getPair();
+    //p = getPair();
     return 0;
 }
