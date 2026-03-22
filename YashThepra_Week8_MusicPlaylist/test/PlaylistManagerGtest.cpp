@@ -1,0 +1,186 @@
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#include "Mocks.h"
+#include "PlaylistManager.h"
+
+using ::testing::_;
+using ::testing::Return;
+
+class PlaylistManagerGtest : public ::testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        EXPECT_CALL(mockFM_, loadPlaylists())
+            .WillRepeatedly(Return(std::vector<Playlist>{}));
+
+        EXPECT_CALL(mockFM_, savePlaylists(_))
+            .WillRepeatedly(Return(true));
+
+        manager_ = std::make_unique<PlaylistManager>(mockFM_);
+    }
+    MockFileManager mockFM_;
+    std::unique_ptr<PlaylistManager> manager_;
+};
+
+TEST_F(PlaylistManagerGtest, ActiveIndexIsMinusOneInitially)
+{
+    EXPECT_EQ(manager_->getActiveIndex(), -1);
+}
+
+TEST_F(PlaylistManagerGtest, CreatePlaylistAddsToCollection)
+{
+    manager_->createPlaylist("Chill");
+    EXPECT_EQ(manager_->getAll().size(), 1u);
+}
+
+TEST_F(PlaylistManagerGtest, CreatePlaylistStoresCorrectName)
+{
+    manager_->createPlaylist("Workout");
+    EXPECT_EQ(manager_->getAll().front().getName(), "Workout");
+}
+
+TEST_F(PlaylistManagerGtest, DeletePlaylistRemovesFromCollection)
+{
+    manager_->createPlaylist("Pop");
+    manager_->createPlaylist("Rock");
+    manager_->deletePlaylist(0);
+
+    EXPECT_EQ(manager_->getAll().size(), 1u);
+    EXPECT_EQ(manager_->getAll().front().getName(), "Rock");
+}
+
+TEST_F(PlaylistManagerGtest, DeleteActivePlaylistResetsActiveIndex)
+{
+    manager_->createPlaylist("Lofi");
+    manager_->selectPlaylist(0);
+    manager_->deletePlaylist(0);
+
+    EXPECT_EQ(manager_->getActiveIndex(), -1);
+    EXPECT_EQ(manager_->getActive(), nullptr);
+}
+
+TEST_F(PlaylistManagerGtest, FindByNameReturnsCorrectPlaylist)
+{
+    manager_->createPlaylist("Blues");
+    Playlist *found{manager_->findByName("Blues")};
+
+    ASSERT_NE(found, nullptr);
+    EXPECT_EQ(found->getName(), "Blues");
+}
+
+TEST_F(PlaylistManagerGtest, GetActiveReturnsCorrectPlaylist)
+{
+    manager_->createPlaylist("Jazz");
+    manager_->selectPlaylist(0);
+
+    ASSERT_NE(manager_->getActive(), nullptr);
+    EXPECT_EQ(manager_->getActive()->getName(), "Jazz");
+}
+
+TEST_F(PlaylistManagerGtest, LoadAllPopulatesPlaylists)
+{
+    std::vector<Playlist> stored{};
+    stored.emplace_back("Stored");
+
+    EXPECT_CALL(mockFM_, loadPlaylists())
+        .WillOnce(Return(stored));
+
+    manager_->loadAll();
+
+    EXPECT_EQ(manager_->getAll().size(), 1u);
+    EXPECT_EQ(manager_->getAll().front().getName(), "Stored");
+}
+
+TEST_F(PlaylistManagerGtest, SaveAllDelegatesToFileManager)
+{
+    EXPECT_CALL(mockFM_, savePlaylists(_))
+        .Times(1)
+        .WillOnce(Return(true));
+
+    EXPECT_TRUE(manager_->saveAll());
+}
+
+TEST_F(PlaylistManagerGtest, SelectPlaylistSetsActiveIndex)
+{
+    manager_->createPlaylist("Alpha");
+    manager_->createPlaylist("Beta");
+
+    EXPECT_TRUE(manager_->selectPlaylist(1));
+    EXPECT_EQ(manager_->getActiveIndex(), 1);
+}
+
+TEST_F(PlaylistManagerGtest, CreateDuplicatePlaylistThrows)
+{
+    manager_->createPlaylist("Duplicate");
+    EXPECT_THROW(manager_->createPlaylist("Duplicate"), std::invalid_argument);
+}
+
+TEST_F(PlaylistManagerGtest, DeleteInvalidNegativeIndexThrows)
+{
+    EXPECT_THROW(manager_->deletePlaylist(-1), std::out_of_range);
+}
+
+TEST_F(PlaylistManagerGtest, DeleteInvalidPositiveIndexThrows)
+{
+    EXPECT_THROW(manager_->deletePlaylist(0), std::out_of_range);
+}
+
+TEST_F(PlaylistManagerGtest, FindByNameReturnsNullForUnknownName)
+{
+    EXPECT_EQ(manager_->findByName("NonExistent"), nullptr);
+}
+
+TEST_F(PlaylistManagerGtest, GetActiveReturnsNullWhenNoneSelected)
+{
+    manager_->createPlaylist("Solo");
+    EXPECT_EQ(manager_->getActive(), nullptr);
+}
+
+TEST_F(PlaylistManagerGtest, SelectInvalidIndexReturnsFalse)
+{
+    EXPECT_FALSE(manager_->selectPlaylist(-1));
+    EXPECT_FALSE(manager_->selectPlaylist(99));
+}
+
+class PlaylistManagerCreateParamGtest : public ::testing::TestWithParam<std::string>
+{
+protected:
+    void SetUp() override
+    {
+        EXPECT_CALL(mockFM_, loadPlaylists())
+            .WillRepeatedly(Return(std::vector<Playlist>{}));
+
+        EXPECT_CALL(mockFM_, savePlaylists(_))
+            .WillRepeatedly(Return(true));
+
+        manager_ = std::make_unique<PlaylistManager>(mockFM_);
+    }
+
+    MockFileManager mockFM_;
+    std::unique_ptr<PlaylistManager> manager_;
+};
+
+TEST_P(PlaylistManagerCreateParamGtest, CreatePlaylistWithVariousNames)
+{
+    const std::string name{GetParam()};
+    manager_->createPlaylist(name);
+
+    ASSERT_EQ(manager_->getAll().size(), 1u);
+    EXPECT_EQ(manager_->getAll().front().getName(), name);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    PlaylistNames,
+    PlaylistManagerCreateParamGtest,
+    ::testing::Values(
+        std::string{"Chill"},
+        std::string{"Focus"},
+        std::string{"Late Night"},
+        std::string{"Road Trip"},
+        std::string{"Workout Mix"}
+));
