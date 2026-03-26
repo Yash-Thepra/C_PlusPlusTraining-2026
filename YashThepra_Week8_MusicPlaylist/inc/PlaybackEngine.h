@@ -15,8 +15,6 @@ public:
 
     ~PlaybackEngine() override;
 
-    bool isPaused() const override;
-
     bool isPlaying() const override;
 
     void nextSong() override;
@@ -32,7 +30,7 @@ public:
     void setPlaylist(Playlist *playlist) override;
 
     void stop() override;
-
+    
 private:
     std::list<Song>::iterator cursor_;
     std::deque<Song *> history_;

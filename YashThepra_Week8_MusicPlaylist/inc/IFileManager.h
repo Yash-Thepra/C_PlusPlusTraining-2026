@@ -8,7 +8,7 @@
 class IFileManager
 {
 public:
-    virtual ~IFileManager() = default;
+    virtual ~IFileManager() {};
 
     virtual bool fileExists(const std::string &path) const = 0;
 

@@ -4,49 +4,86 @@
 #include <limits>
 #include <string>
 
+#include "Constant.h"
+
 namespace Input
 {
-    int getInt(const int maximum, const int minimum)
+    void trimInputData(std::string &inputData)
     {
-        int value;
+        int start = Constant::zero;
+        while (start < inputData.length() && inputData[start] == Constant::space)
+        {
+            start++;
+        }
+        int end = inputData.length() - Constant::one;
+        while (end >= start && inputData[end] == Constant::space)
+        {
+            end--;
+        }
+        int index = Constant::zero;
+        while (start <= end)
+        {
+            inputData[index++] = inputData[start++];
+        }
+        inputData.resize(index);
+    }
+
+    int readValidInteger(const int maximum, const int minimum)
+    {
+        std::string userInput;
         while (true)
         {
-            std::cin >> value;
-            if (std::cin.fail() || value < minimum || value > maximum)
+            std::getline(std::cin, userInput);
+
+            trimInputData(userInput);
+            bool isValid = !userInput.empty();
+            for (char temp : userInput)
             {
-                std::cin.clear();
-                std::cin.ignore(std::numeric_limits<std::streamsize>::maximum(), '\n');
-                std::cout << "  Invalid. Enter a number between " << minimum << " and " << maximum << ": ";
+                if (!std::isdigit(temp) && !(temp == Constant::dashChar && &temp == &userInput[Constant::zero]))
+                {
+                    isValid = false;
+                    break;
+                }
             }
-            else
+            if (isValid)
             {
-                std::cin.ignore(std::numeric_limits<std::streamsize>::maximum(), '\n');
-                return value;
+                try
+                {
+                    const int value{std::stoi(userInput)};
+                    if (value >= minimum && value <= maximum)
+                    {
+                        return value;
+                    }
+                }
+                catch (...)
+                {
+                }
             }
+            std::cout << Constant::invalidInput << minimum << Constant::andWord << maximum << Constant::colonSpace;
         }
     }
 
-    std::string getString(const std::string &prompt)
+    std::string readNonEmptyString(const std::string &userInput)
     {
-        std::string value{};
-        std::cout << prompt;
+        std::string value;
+        std::cout << userInput;
         while (std::getline(std::cin, value))
         {
             if (!value.empty())
             {
                 return value;
             }
-            std::cout << "  Cannot be empty. " << prompt;
+            std::cout << Constant::cannotEmpty << userInput;
         }
         return value;
     }
 
-    bool getConfirm(const std::string &prompt)
+    bool checkYesOrNo(const std::string &userInput)
     {
-        std::cout << prompt << " (y/n): ";
+        std::cout << userInput << Constant::yesOrNo;
         char ch;
         std::cin >> ch;
-        std::cin.ignore(std::numeric_limits<std::streamsize>::maximum(), '\n');
-        return (ch == 'y' || ch == 'Y');
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), Constant::newLineChar);
+        return (ch == Constant::yLower || ch == Constant::yUpper);
     }
 }

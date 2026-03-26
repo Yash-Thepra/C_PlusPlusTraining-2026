@@ -1,8 +1,9 @@
 #include <iostream>
 
+#include "Constant.h"
 #include "PlaybackEngine.h"
 
-PlaybackEngine::PlaybackEngine() : cursor_{}, history_{}, isPaused_{false}, isPlaying_{false}, music_{}, playlist_{nullptr}, upNext_{}
+PlaybackEngine::PlaybackEngine() : history_{}, isPaused_{false}, isPlaying_{false}, music_{}, playlist_{nullptr}, upNext_{}
 {
 }
 
@@ -13,20 +14,16 @@ PlaybackEngine::~PlaybackEngine()
 
 std::string PlaybackEngine::getCurrentSongTitle() const
 {
+    std::string result = playlist_->getCurrent()->getTitle();
     if (!isPlaying_ && !isPaused_)
     {
-        return "No song playing";
+        result = Constant::noSongPlaying;
     }
-    if (playlist_ == nullptr || playlist_->isEmpty())
+    else if (playlist_ == nullptr || playlist_->isEmpty())
     {
-        return "No song playing";
+        result = Constant::noSongPlaying;
     }
-    return cursor_->getTitle();
-}
-
-bool PlaybackEngine::isPaused() const
-{
-    return isPaused_;
+    return result;
 }
 
 bool PlaybackEngine::isPlaying() const
@@ -36,110 +33,102 @@ bool PlaybackEngine::isPlaying() const
 
 void PlaybackEngine::nextSong()
 {
-    if (playlist_ == nullptr || playlist_->isEmpty())
+    if (playlist_ != nullptr && !playlist_->isEmpty())
     {
-        return;
-    }
-    pushToHistory();
-    if (!upNext_.empty())
-    {
-        Song *queued{upNext_.front()};
-        upNext_.pop();
-
-        for (auto it{playlist_->getSongs().begin()};
-             it != playlist_->getSongs().end(); ++it)
+        pushToHistory();
+        if (!upNext_.empty())
         {
-            if (&(*it) == queued)
+            Song *queued = upNext_.front();
+            upNext_.pop();
+            for (auto iterator = playlist_->getSongs().begin(); iterator != playlist_->getSongs().end(); iterator++)
             {
-                cursor_ = it;
-                break;
+                if (&(*iterator) == queued)
+                {
+                    playlist_->setCurrent(iterator);
+                    break;
+                }
             }
         }
+        else
+        {
+            auto next = std::next(playlist_->getCurrent());
+            playlist_->setCurrent(next == playlist_->getSongs().end() ? playlist_->getSongs().begin() : next);
+        }
+        loadCurrentSong();
     }
-    else
-    {
-        std::list<Song>::iterator next{std::next(cursor_)};
-        cursor_ = (next == playlist_->getSongs().end()) ? playlist_->getSongs().begin() : next;
-    }
-    loadCurrentSong();
 }
 
 void PlaybackEngine::pause()
 {
-    if (!isPlaying_ || isPaused_)
+    if (isPlaying_ && !isPaused_)
     {
-        return;
+        music_.pause();
+        isPaused_ = true;
+        isPlaying_ = false;
     }
-    music_.pause();
-    isPaused_ = true;
-    isPlaying_ = false;
 }
 
 void PlaybackEngine::play()
 {
     if (playlist_ == nullptr || playlist_->isEmpty())
     {
-        std::cout << "  No playlist loaded or playlist is empty.\n";
-        return;
+        std::cout << Constant::noPlaylistLoaded;
     }
-    cursor_ = playlist_->getSongs().begin();
-    loadCurrentSong();
+    else
+    {
+        playlist_->setCurrent(playlist_->getSongs().begin());
+        loadCurrentSong();
+    }
 }
 
 void PlaybackEngine::previousSong()
 {
-    if (playlist_ == nullptr || playlist_->isEmpty())
+    if (playlist_ != nullptr && !playlist_->isEmpty())
     {
-        return;
-    }
-    if (!history_.empty())
-    {
-        Song *prev{history_.back()};
-        history_.pop_back();
-
-        for (auto it{playlist_->getSongs().begin()};
-             it != playlist_->getSongs().end(); ++it)
+        if (!history_.empty())
         {
-            if (&(*it) == prev)
+            Song *prev = history_.back();
+            history_.pop_back();
+            for (auto iterator = playlist_->getSongs().begin(); iterator != playlist_->getSongs().end(); iterator++)
             {
-                cursor_ = it;
-                break;
+                if (&(*iterator) == prev)
+                {
+                    playlist_->setCurrent(iterator);
+                    break;
+                }
             }
         }
+        else if (playlist_->getCurrent() != playlist_->getSongs().begin())
+        {
+            playlist_->setCurrent(std::prev(playlist_->getCurrent()));
+        }
+        loadCurrentSong();
     }
-    else if (cursor_ != playlist_->getSongs().begin())
-    {
-        --cursor_;
-    }
-    loadCurrentSong();
 }
 
 void PlaybackEngine::queueNext(const Song &song)
 {
-    if (playlist_ == nullptr)
+    if (playlist_ != nullptr)
     {
-        return;
-    }
-    for (auto it{playlist_->getSongs().begin()};
-         it != playlist_->getSongs().end(); ++it)
-    {
-        if (it->getFilePath() == song.getFilePath())
+        for (auto iterator = playlist_->getSongs().begin(); iterator != playlist_->getSongs().end(); iterator++)
         {
-            upNext_.push(&(*it));
-            return;
+            if (iterator->getFilePath() == song.getFilePath())
+            {
+                upNext_.push(&(*iterator));
+                break;
+            }
         }
     }
 }
 
 void PlaybackEngine::resume()
 {
-    if (!isPaused_)
+    if (isPaused_)
     {
-        return;
+        music_.play();
+        isPaused_ = false;
+        isPlaying_ = true;
     }
-    music_.play();
-    isPaused_ = false;
-    isPlaying_ = true;
 }
 
 void PlaybackEngine::setPlaylist(Playlist *playlist)
@@ -157,32 +146,40 @@ void PlaybackEngine::stop()
 
 bool PlaybackEngine::loadCurrentSong()
 {
-    if (cursor_ == playlist_->getSongs().end())
+    bool result = true;
+    if (playlist_->getCurrent() == playlist_->getSongs().end())
     {
-        return false;
+        result = false;
     }
-    if (!music_.openFromFile(cursor_->getFilePath()))
+    else
     {
-        std::cerr << "  Could not load: " << cursor_->getFilePath() << '\n';
-        return false;
+        std::string path = playlist_->getCurrent()->getFilePath();
+        if (!music_.openFromFile(path))
+        {
+            std::cerr << Constant::cannotLoad << path << Constant::newLineChar;
+            std::cerr << Constant::sfmlError;
+            result = false;
+        }
+        else
+        {
+            music_.play();
+            isPlaying_ = true;
+            isPaused_ = false;
+            std::cout << Constant::nowPlaying << playlist_->getCurrent()->getTitle() << Constant::dash << Constant::newLineChar;
+        }
     }
-    music_.play();
-    isPlaying_ = true;
-    isPaused_ = false;
-    std::cout << "  Now playing: " << cursor_->getTitle() << " - " << cursor_->getArtist() << '\n';
-    return true;
+    return result;
 }
 
 void PlaybackEngine::pushToHistory()
 {
-    if (playlist_ == nullptr || playlist_->isEmpty())
+    if (playlist_ != nullptr && !playlist_->isEmpty())
     {
-        return;
+        constexpr std::size_t maxHistory = 20;
+        if (history_.size() >= maxHistory)
+        {
+            history_.pop_front();
+        }
+        history_.push_back(&(*playlist_->getCurrent()));
     }
-    constexpr std::size_t maxHistory{20};
-    if (history_.size() >= maxHistory)
-    {
-        history_.pop_front();
-    }
-    history_.push_back(&(*cursor_));
 }

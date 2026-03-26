@@ -5,12 +5,13 @@
 #include <string>
 #include <vector>
 
+#include "Constant.h"
 #include "IFileManager.h"
 
 class FileManager : public IFileManager
 {
 public:
-    FileManager(const std::string &savePath, const char delimiter = '|');
+    FileManager(const std::string &savePath, const char delimiter = Constant::delimiter);
 
     bool fileExists(const std::string &path) const override;
 

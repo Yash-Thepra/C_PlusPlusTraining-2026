@@ -5,9 +5,7 @@
 class Song
 {
 public:
-    Song(const std::string &artist, const int duration, const std::string &filePath, const std::string &title);
-
-    std::string getArtist() const;
+    Song(const int duration, const std::string &filePath, const std::string &title);
 
     int getDuration() const;
 
@@ -16,7 +14,6 @@ public:
     std::string getTitle() const;
 
 private:
-    std::string artist_;
     int duration_;
     std::string filePath_;
     std::string title_;

@@ -7,19 +7,26 @@
 
 static std::string currentDateString()
 {
-    const auto now{std::chrono::system_clock::now()};
-    const std::time_t t{std::chrono::system_clock::to_time_t(now)};
-    std::ostringstream oss{};
-    oss << std::put_time(std::localtime(&t), "%Y-%m-%d");
+    auto now = std::chrono::system_clock::now();
+    const time_t time = std::chrono::system_clock::to_time_t(now);
+    std::ostringstream oss;
+    oss << std::put_time(std::localtime(&time), "%Y-%m-%d");
     return oss.str();
 }
 
-Playlist::Playlist(const std::string &name) : createdDate_{currentDateString()}, name_{name}, songs_{}
+Playlist::Playlist(const std::string &name) : createdDate_{currentDateString()}, current_{}, name_{name}, songs_{}
 {
+    current_ = songs_.end();
 }
 
-Playlist::Playlist(const std::string &createdDate, const std::string &name) : createdDate_{createdDate}, name_{name}, songs_{}
+std::list<Song>::iterator Playlist::getCurrent()
 {
+    return current_;
+}
+
+void Playlist::setCurrent(std::list<Song>::iterator iterator)
+{
+    current_ = iterator;
 }
 
 std::string Playlist::getCreatedDate() const
@@ -42,7 +49,7 @@ bool Playlist::isEmpty() const
     return songs_.empty();
 }
 
-std::size_t Playlist::size() const
+int Playlist::getSize() const
 {
     return songs_.size();
 }
@@ -57,38 +64,53 @@ const std::list<Song> &Playlist::getSongs() const
     return songs_;
 }
 
-bool Playlist::moveSongDown(std::list<Song>::iterator it)
+bool Playlist::moveSongDown(std::list<Song>::iterator iterator)
 {
-    if (it == songs_.end())
+    bool result = true;
+    if (iterator == songs_.end())
     {
-        return false;
+        result = false;
     }
-    std::list<Song>::iterator next{std::next(it)};
-    if (next == songs_.end())
+    else
     {
-        return false;
+        std::list<Song>::iterator next = std::next(iterator);
+        if (next == songs_.end())
+        {
+            result = false;
+        }
+        else
+        {
+            songs_.splice(std::next(next), songs_, iterator);
+        }
     }
-    songs_.splice(std::next(next), songs_, it);
-    return true;
+    return result;
 }
 
-bool Playlist::moveSongUp(std::list<Song>::iterator it)
+bool Playlist::moveSongUp(std::list<Song>::iterator iterator)
 {
-    if (it == songs_.begin() || it == songs_.end())
+    bool result = true;
+    if (iterator == songs_.begin() || iterator == songs_.end())
     {
-        return false;
+        result = false;
     }
-    std::list<Song>::iterator prev{std::prev(it)};
-    songs_.splice(prev, songs_, it);
-    return true;
+    else
+    {
+        std::list<Song>::iterator prev = std::prev(iterator);
+        songs_.splice(prev, songs_, iterator);
+    }
+    return result;
 }
 
-bool Playlist::removeSong(std::list<Song>::iterator it)
+bool Playlist::removeSong(std::list<Song>::iterator iterator)
 {
-    if (it == songs_.end())
+    bool result = true;
+    if (iterator == songs_.end())
     {
-        return false;
+        result = false;
     }
-    songs_.erase(it);
-    return true;
+    else
+    {
+        songs_.erase(iterator);
+    }
+    return result;
 }

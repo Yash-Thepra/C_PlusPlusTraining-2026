@@ -8,103 +8,100 @@
 #include "Song.h"
 
 using ::testing::_;
-using ::testing::Return;
-using ::testing::Times;
-
-class FileManagerGtest : public ::testing::Test
+class GivenAnFileManagerGtest : public ::testing::Test
 {
 protected:
     void SetUp() override
     {
         mockFM_   = std::make_unique<MockFileManager>();
         playlist_ = std::make_unique<Playlist>("Test Playlist");
-        playlist_->addSong(Song{ "Artist A", 180, "a.mp3", "Song A" });
-        playlist_->addSong(Song{ "Artist B", 200, "b.mp3", "Song B" });
+        playlist_->addSong(Song(180, "a.mp3", "Song A" ));
+        playlist_->addSong(Song(200, "b.mp3", "Song B" ));
     }
 
     std::unique_ptr<MockFileManager> mockFM_;
     std::unique_ptr<Playlist>        playlist_;
 };
 
-TEST_F(FileManagerGtest, FileExistsReturnsTrueForExistingFile)
+TEST_F(GivenAnFileManagerGtest, WhenFileExists_ThenReturnsTrueForExistingFile)
 {
     EXPECT_CALL(*mockFM_, fileExists("playlists.txt"))
-        .WillOnce(Return(true));
+        .WillOnce(::testing::Return(true));
 
     EXPECT_TRUE(mockFM_->fileExists("playlists.txt"));
 }
 
-TEST_F(FileManagerGtest, LoadPlaylistsReturnsMultiplePlaylists)
+TEST_F(GivenAnFileManagerGtest, WhenLoadPlaylists_ThenReturnsMultiplePlaylists)
 {
     std::vector<Playlist> stored{};
     stored.emplace_back("Playlist One");
     stored.emplace_back("Playlist Two");
 
     EXPECT_CALL(*mockFM_, loadPlaylists())
-        .WillOnce(Return(stored));
+        .WillOnce(::testing::Return(stored));
 
     const auto result{ mockFM_->loadPlaylists() };
     EXPECT_EQ(result.size(), 2u);
 }
 
-TEST_F(FileManagerGtest, LoadPlaylistsReturnsStoredName)
+TEST_F(GivenAnFileManagerGtest, WhenLoadPlaylists_ThenReturnsStoredName)
 {
     std::vector<Playlist> stored{};
     stored.emplace_back("Stored");
 
     EXPECT_CALL(*mockFM_, loadPlaylists())
-        .WillOnce(Return(stored));
+        .WillOnce(::testing::Return(stored));
 
     const auto result{ mockFM_->loadPlaylists() };
     ASSERT_EQ(result.size(), 1u);
     EXPECT_EQ(result.front().getName(), "Stored");
 }
 
-TEST_F(FileManagerGtest, SaveCalledExactlyOnce)
+TEST_F(GivenAnFileManagerGtest, WhenSaveCalledExactlyOnce)
 {
     std::vector<Playlist> pls{};
     pls.emplace_back("Once");
 
     EXPECT_CALL(*mockFM_, savePlaylists(_))
         .Times(1)
-        .WillOnce(Return(true));
+        .WillOnce(::testing::Return(true));
 
     mockFM_->savePlaylists(pls);
 }
 
-TEST_F(FileManagerGtest, SavePlaylistsReturnsTrueOnSuccess)
+TEST_F(GivenAnFileManagerGtest, WhenSavePlaylists_ThenReturnsTrueOnSuccess)
 {
     std::vector<Playlist> pls{};
     pls.emplace_back("Alpha");
 
     EXPECT_CALL(*mockFM_, savePlaylists(_))
-        .WillOnce(Return(true));
+        .WillOnce(::testing::Return(true));
 
     EXPECT_TRUE(mockFM_->savePlaylists(pls));
 }
 
-TEST_F(FileManagerGtest, FileExistsReturnsFalseForMissingFile)
+TEST_F(GivenAnFileManagerGtest, WhenFileExists_ThenReturnsFalseForMissingFile)
 {
     EXPECT_CALL(*mockFM_, fileExists("missing.txt"))
-        .WillOnce(Return(false));
+        .WillOnce(::testing::Return(false));
 
     EXPECT_FALSE(mockFM_->fileExists("missing.txt"));
 }
 
-TEST_F(FileManagerGtest, LoadPlaylistsReturnsEmptyWhenNoFile)
+TEST_F(GivenAnFileManagerGtest, WhneLoadPlaylists_ThenReturnsEmptyWhenNoFile)
 {
     EXPECT_CALL(*mockFM_, loadPlaylists())
-        .WillOnce(Return(std::vector<Playlist>{}));
+        .WillOnce(::testing::Return(std::vector<Playlist>{}));
 
     EXPECT_TRUE(mockFM_->loadPlaylists().empty());
 }
 
-TEST_F(FileManagerGtest, SavePlaylistsReturnsFalseOnFailure)
+TEST_F(GivenAnFileManagerGtest, WhenSavePlaylists_ThenReturnsFalseOnFailure)
 {
     std::vector<Playlist> pls{};
 
     EXPECT_CALL(*mockFM_, savePlaylists(_))
-        .WillOnce(Return(false));
+        .WillOnce(::testing::Return(false));
 
     EXPECT_FALSE(mockFM_->savePlaylists(pls));
 }
@@ -115,7 +112,7 @@ struct FileExistsParam
     std::string path;
 };
 
-class FileExistsParamGtest
+class GivenAnFileExistsParamGtest
     : public ::testing::TestWithParam<FileExistsParam>
 {
 protected:
@@ -127,19 +124,19 @@ protected:
     std::unique_ptr<MockFileManager> mockFM_;
 };
 
-TEST_P(FileExistsParamGtest, FileExistsReturnsExpectedResult)
+TEST_P(GivenAnFileExistsParamGtest, WhenFileExists_ThenReturnsExpectedResult)
 {
     const auto& p{ GetParam() };
 
     EXPECT_CALL(*mockFM_, fileExists(p.path))
-        .WillOnce(Return(p.expected));
+        .WillOnce(::testing::Return(p.expected));
 
     EXPECT_EQ(mockFM_->fileExists(p.path), p.expected);
 }
 
 INSTANTIATE_TEST_SUITE_P(
     FileExistsCases,
-    FileExistsParamGtest,
+    GivenAnFileExistsParamGtest,
     ::testing::Values(
         FileExistsParam{ false, "missing.txt"},
         FileExistsParam{ false, "nonexistent/x.txt"},

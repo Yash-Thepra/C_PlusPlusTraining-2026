@@ -3,13 +3,12 @@
 
 #include "Song.h"
 
-class SongGtest : public ::testing::Test
+class GivenAnSongGtest : public ::testing::Test
 {
 protected:
     void SetUp() override
     {
         song_ = std::make_unique<Song>(
-            "The Weeknd",
             200,
             "resource/blinding_lights.mp3",
             "Blinding Lights"
@@ -18,43 +17,33 @@ protected:
     std::unique_ptr<Song> song_;
 };
 
-TEST_F(SongGtest, GetArtistReturnsCorrectArtist)
-{
-    EXPECT_EQ(song_->getArtist(), "The Weeknd");
-}
-
-TEST_F(SongGtest, GetDurationReturnsCorrectDuration)
+TEST_F(GivenAnSongGtest, WhenGetDuration_ThenReturnsCorrectDuration)
 {
     EXPECT_EQ(song_->getDuration(), 200);
 }
 
-TEST_F(SongGtest, GetFilePathReturnsCorrectPath)
+TEST_F(GivenAnSongGtest, WhenGetFilePath_ThenReturnsCorrectPath)
 {
     EXPECT_EQ(song_->getFilePath(), "resource/blinding_lights.mp3");
 }
 
-TEST_F(SongGtest, GetTitleReturnsCorrectTitle)
+TEST_F(GivenAnSongGtest, WhenGetTitle_ThenReturnsCorrectTitle)
 {
     EXPECT_EQ(song_->getTitle(), "Blinding Lights");
 }
 
-TEST_F(SongGtest, ZeroDurationIsAccepted)
+TEST_F(GivenAnSongGtest, WhenZeroDurationIsAccepted)
 {
-    Song s{ "Artist", 0, "path.mp3", "Title" };
+    Song s{0, "path.mp3", "Title" };
     EXPECT_EQ(s.getDuration(), 0);
 }
 
-TEST_F(SongGtest, ArtistDoesNotMatchWrongValue)
-{
-    EXPECT_NE(song_->getArtist(), "Wrong Artist");
-}
-
-TEST_F(SongGtest, DurationDoesNotMatchWrongValue)
+TEST_F(GivenAnSongGtest, WhenDurationDoesNotMatchWrongValue)
 {
     EXPECT_NE(song_->getDuration(), 999);
 }
 
-TEST_F(SongGtest, TitleDoesNotMatchWrongValue)
+TEST_F(GivenAnSongGtest, WhenTitleDoesNotMatchWrongValue)
 {
     EXPECT_NE(song_->getTitle(), "Wrong Title");
 }
@@ -67,14 +56,12 @@ struct SongParam
     std::string title;
 };
 
-class SongParamGtest : public ::testing::TestWithParam<SongParam> {};
+class GivenAnSongParamGtest : public ::testing::TestWithParam<SongParam> {};
 
-TEST_P(SongParamGtest, ConstructsWithVariousValidData)
+TEST_P(GivenAnSongParamGtest, WhenConstructsWithVariousValidData)
 {
     const auto& p{ GetParam() };
-    const Song  s{ p.artist, p.duration, p.filePath, p.title };
-
-    EXPECT_EQ(s.getArtist(),   p.artist);
+    const Song  s{p.duration, p.filePath, p.title };
     EXPECT_EQ(s.getDuration(), p.duration);
     EXPECT_EQ(s.getFilePath(), p.filePath);
     EXPECT_EQ(s.getTitle(),    p.title);
@@ -82,7 +69,7 @@ TEST_P(SongParamGtest, ConstructsWithVariousValidData)
 
 INSTANTIATE_TEST_SUITE_P(
     SongVariants,
-    SongParamGtest,
+    GivenAnSongParamGtest,
     ::testing::Values(
         SongParam{ "Artist A", 180, "a.mp3", "Song A" },
         SongParam{ "Artist B", 240, "b.mp3", "Song B" },

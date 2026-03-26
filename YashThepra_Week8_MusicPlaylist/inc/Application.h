@@ -1,11 +1,11 @@
 #pragma once
 
-#include <stack>
 #include <string>
 #include <vector>
 
 #include "IFileManager.h"
 #include "IPlaybackEngine.h"
+#include "Playlist.h"
 #include "PlaylistManager.h"
 
 class Application
@@ -21,10 +21,10 @@ private:
     IPlaybackEngine &engine_;
     IFileManager &fileManager_;
     bool isRunning_;
-    std::stack<std::string> menuHistory_;
-    std::vector<std::string> menuOptions_;
+    std::vector<std::string> mainMenu_;
     PlaylistManager playlistManager_;
-
+    Playlist searchPlaylist_;
+    
     void handleAddSong();
 
     void handleCreatePlaylist();
@@ -39,15 +39,23 @@ private:
 
     void handleSelectPlaylist();
 
+    void handleSearch();
+
+    void searchInPlaylist(const std::string& userInput);
+
+    void searchInResource(const std::string& userInput);
+    
     void displayNowPlaying() const;
 
     void displayPlaylists() const;
 
     void displaySongs() const;
 
-    int promptMenuChoice(const int max);
+    int promptMenuChoice(const int maximum);
 
     void showMainMenu();
 
     void showPlaylistMenu();
+
+    std::vector<std::string> displayResourceContent() const;
 };

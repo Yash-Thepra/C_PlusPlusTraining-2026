@@ -5,10 +5,8 @@
 class IPlaybackEngine
 {
 public:
-    virtual ~IPlaybackEngine() = default;
-
-    virtual bool isPaused() const = 0;
-
+    virtual ~IPlaybackEngine() {};
+    
     virtual bool isPlaying() const = 0;
 
     virtual void nextSong() = 0;

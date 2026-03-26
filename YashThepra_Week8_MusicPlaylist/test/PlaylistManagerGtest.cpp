@@ -10,7 +10,7 @@
 using ::testing::_;
 using ::testing::Return;
 
-class PlaylistManagerGtest : public ::testing::Test
+class GivenAnPlaylistManagerGtest : public ::testing::Test
 {
 protected:
     void SetUp() override
@@ -27,24 +27,24 @@ protected:
     std::unique_ptr<PlaylistManager> manager_;
 };
 
-TEST_F(PlaylistManagerGtest, ActiveIndexIsMinusOneInitially)
+TEST_F(GivenAnPlaylistManagerGtest, WhenActiveIndexIsMinusOneInitially)
 {
     EXPECT_EQ(manager_->getActiveIndex(), -1);
 }
 
-TEST_F(PlaylistManagerGtest, CreatePlaylistAddsToCollection)
+TEST_F(GivenAnPlaylistManagerGtest, WhenCreatePlaylistAddsToCollection)
 {
     manager_->createPlaylist("Chill");
     EXPECT_EQ(manager_->getAll().size(), 1u);
 }
 
-TEST_F(PlaylistManagerGtest, CreatePlaylistStoresCorrectName)
+TEST_F(GivenAnPlaylistManagerGtest, WhenCreatePlaylistStoresCorrectName)
 {
     manager_->createPlaylist("Workout");
     EXPECT_EQ(manager_->getAll().front().getName(), "Workout");
 }
 
-TEST_F(PlaylistManagerGtest, DeletePlaylistRemovesFromCollection)
+TEST_F(GivenAnPlaylistManagerGtest, WhenDeletePlaylistRemovesFromCollection)
 {
     manager_->createPlaylist("Pop");
     manager_->createPlaylist("Rock");
@@ -54,7 +54,7 @@ TEST_F(PlaylistManagerGtest, DeletePlaylistRemovesFromCollection)
     EXPECT_EQ(manager_->getAll().front().getName(), "Rock");
 }
 
-TEST_F(PlaylistManagerGtest, DeleteActivePlaylistResetsActiveIndex)
+TEST_F(GivenAnPlaylistManagerGtest, WhenDeleteActivePlaylistResetsActiveIndex)
 {
     manager_->createPlaylist("Lofi");
     manager_->selectPlaylist(0);
@@ -64,7 +64,7 @@ TEST_F(PlaylistManagerGtest, DeleteActivePlaylistResetsActiveIndex)
     EXPECT_EQ(manager_->getActive(), nullptr);
 }
 
-TEST_F(PlaylistManagerGtest, FindByNameReturnsCorrectPlaylist)
+TEST_F(GivenAnPlaylistManagerGtest, WhenFindByName_ThenReturnsCorrectPlaylist)
 {
     manager_->createPlaylist("Blues");
     Playlist *found{manager_->findByName("Blues")};
@@ -73,7 +73,7 @@ TEST_F(PlaylistManagerGtest, FindByNameReturnsCorrectPlaylist)
     EXPECT_EQ(found->getName(), "Blues");
 }
 
-TEST_F(PlaylistManagerGtest, GetActiveReturnsCorrectPlaylist)
+TEST_F(GivenAnPlaylistManagerGtest, WhenGetActive_ThenReturnsCorrectPlaylist)
 {
     manager_->createPlaylist("Jazz");
     manager_->selectPlaylist(0);
@@ -82,7 +82,7 @@ TEST_F(PlaylistManagerGtest, GetActiveReturnsCorrectPlaylist)
     EXPECT_EQ(manager_->getActive()->getName(), "Jazz");
 }
 
-TEST_F(PlaylistManagerGtest, LoadAllPopulatesPlaylists)
+TEST_F(GivenAnPlaylistManagerGtest, WhenLoadAllPopulatesPlaylists)
 {
     std::vector<Playlist> stored{};
     stored.emplace_back("Stored");
@@ -96,7 +96,7 @@ TEST_F(PlaylistManagerGtest, LoadAllPopulatesPlaylists)
     EXPECT_EQ(manager_->getAll().front().getName(), "Stored");
 }
 
-TEST_F(PlaylistManagerGtest, SaveAllDelegatesToFileManager)
+TEST_F(GivenAnPlaylistManagerGtest, WhenSaveAllDelegatesToFileManager)
 {
     EXPECT_CALL(mockFM_, savePlaylists(_))
         .Times(1)
@@ -105,7 +105,7 @@ TEST_F(PlaylistManagerGtest, SaveAllDelegatesToFileManager)
     EXPECT_TRUE(manager_->saveAll());
 }
 
-TEST_F(PlaylistManagerGtest, SelectPlaylistSetsActiveIndex)
+TEST_F(GivenAnPlaylistManagerGtest, WhenSelectPlaylistSetsActiveIndex)
 {
     manager_->createPlaylist("Alpha");
     manager_->createPlaylist("Beta");
@@ -114,40 +114,40 @@ TEST_F(PlaylistManagerGtest, SelectPlaylistSetsActiveIndex)
     EXPECT_EQ(manager_->getActiveIndex(), 1);
 }
 
-TEST_F(PlaylistManagerGtest, CreateDuplicatePlaylistThrows)
+TEST_F(GivenAnPlaylistManagerGtest, WhenCreateDuplicatePlaylistThrows)
 {
     manager_->createPlaylist("Duplicate");
     EXPECT_THROW(manager_->createPlaylist("Duplicate"), std::invalid_argument);
 }
 
-TEST_F(PlaylistManagerGtest, DeleteInvalidNegativeIndexThrows)
+TEST_F(GivenAnPlaylistManagerGtest, WhenDeleteInvalidNegativeIndexThrows)
 {
     EXPECT_THROW(manager_->deletePlaylist(-1), std::out_of_range);
 }
 
-TEST_F(PlaylistManagerGtest, DeleteInvalidPositiveIndexThrows)
+TEST_F(GivenAnPlaylistManagerGtest, WhenDeleteInvalidPositiveIndexThrows)
 {
     EXPECT_THROW(manager_->deletePlaylist(0), std::out_of_range);
 }
 
-TEST_F(PlaylistManagerGtest, FindByNameReturnsNullForUnknownName)
+TEST_F(GivenAnPlaylistManagerGtest, WhenFindByNameReturnsNullForUnknownName)
 {
     EXPECT_EQ(manager_->findByName("NonExistent"), nullptr);
 }
 
-TEST_F(PlaylistManagerGtest, GetActiveReturnsNullWhenNoneSelected)
+TEST_F(GivenAnPlaylistManagerGtest, WhenGetActive_ThenReturnsNullWhenNoneSelected)
 {
     manager_->createPlaylist("Solo");
     EXPECT_EQ(manager_->getActive(), nullptr);
 }
 
-TEST_F(PlaylistManagerGtest, SelectInvalidIndexReturnsFalse)
+TEST_F(GivenAnPlaylistManagerGtest, WhenSelectInvalidIndex_ThenReturnsFalse)
 {
     EXPECT_FALSE(manager_->selectPlaylist(-1));
     EXPECT_FALSE(manager_->selectPlaylist(99));
 }
 
-class PlaylistManagerCreateParamGtest : public ::testing::TestWithParam<std::string>
+class GivenAnPlaylistManagerCreateParamGtest : public ::testing::TestWithParam<std::string>
 {
 protected:
     void SetUp() override
@@ -165,7 +165,7 @@ protected:
     std::unique_ptr<PlaylistManager> manager_;
 };
 
-TEST_P(PlaylistManagerCreateParamGtest, CreatePlaylistWithVariousNames)
+TEST_P(GivenAnPlaylistManagerCreateParamGtest, CreatePlaylistWithVariousNames)
 {
     const std::string name{GetParam()};
     manager_->createPlaylist(name);
@@ -176,11 +176,10 @@ TEST_P(PlaylistManagerCreateParamGtest, CreatePlaylistWithVariousNames)
 
 INSTANTIATE_TEST_SUITE_P(
     PlaylistNames,
-    PlaylistManagerCreateParamGtest,
+    GivenAnPlaylistManagerCreateParamGtest,
     ::testing::Values(
         std::string{"Chill"},
         std::string{"Focus"},
         std::string{"Late Night"},
         std::string{"Road Trip"},
-        std::string{"Workout Mix"}
-));
+        std::string{"Workout Mix"}));

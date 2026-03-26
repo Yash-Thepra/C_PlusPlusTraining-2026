@@ -1,10 +1,14 @@
+#include <algorithm>
+#include <filesystem>
 #include <iostream>
 #include <string>
+#include <SFML/Audio.hpp>
 
 #include "Application.h"
+#include "Constant.h"
 #include "Input.h"
 
-Application::Application(IFileManager &fileManager, IPlaybackEngine &engine) : engine_{engine}, fileManager_{fileManager}, isRunning_{true}, menuHistory_{}, menuOptions_{},playlistManager_{fileManager}
+Application::Application(IFileManager &fileManager, IPlaybackEngine &engine) : engine_(engine), fileManager_(fileManager), isRunning_(true), playlistManager_(fileManager), searchPlaylist_(Constant::searchResult)
 {
     playlistManager_.loadAll();
 }
@@ -24,15 +28,8 @@ void Application::run()
 
 void Application::showMainMenu()
 {
-    std::cout << "\n===== Music Playlist =====\n"
-              << "  1. Create playlist\n"
-              << "  2. Select playlist\n"
-              << "  3. Delete playlist\n"
-              << "  4. Song management\n"
-              << "  5. Playback controls\n"
-              << "  0. Exit\n"
-              << "Choice: ";
-    const int choice{promptMenuChoice(5)};
+    std::cout << Constant::mainMenu;
+    int choice = promptMenuChoice(Constant::six);
     switch (choice)
     {
     case 1:
@@ -50,6 +47,9 @@ void Application::showMainMenu()
     case 5:
         handlePlayback();
         break;
+    case 6:
+        handleSearch();
+        break;
     case 0:
         isRunning_ = false;
         break;
@@ -60,257 +60,397 @@ void Application::showMainMenu()
 
 void Application::showPlaylistMenu()
 {
-    Playlist *active{playlistManager_.getActive()};
-    if (active == nullptr)
+    Playlist *active = playlistManager_.getActive();
+    if (active != nullptr)
     {
-        std::cout << "  No playlist selected. Please select one first.\n";
-        return;
+        bool inMenu{true};
+        while (inMenu)
+        {
+            std::cout << Constant::newLineDash << active->getName() << Constant::dashNewLine << Constant::songManagement;
+            int choice = promptMenuChoice(5);
+            switch (choice)
+            {
+            case 1:
+                handleAddSong();
+                break;
+            case 2:
+                handleRemoveSong();
+                break;
+            case 3:
+                handleMoveSong();
+                break;
+            case 4:
+                handleMoveSong();
+                break;
+            case 5:
+                displaySongs();
+                break;
+            case 0:
+                inMenu = false;
+                break;
+            default:
+                break;
+            }
+        }
     }
-    std::cout << "\n--- " << active->getName() << " ---\n"
-              << "  1. Add song\n"
-              << "  2. Remove song\n"
-              << "  3. Move song up\n"
-              << "  4. Move song down\n"
-              << "  5. Display songs\n"
-              << "  0. Back\n"
-              << "Choice: ";
-    const int choice{promptMenuChoice(5)};
-    switch (choice)
+    else 
     {
-    case 1:
-        handleAddSong();
-        break;
-    case 2:
-        handleRemoveSong();
-        break;
-    case 3:
-        handleMoveSong();
-        break;
-    case 4:
-        handleMoveSong();
-        break;
-    case 5:
-        displaySongs();
-        break;
-    case 0:
-        break;
-    default:
-        break;
+        std::cout << Constant::noPlaylistSelected;
     }
+}
+
+std::vector<std::string> Application::displayResourceContent() const
+{
+    std::vector<std::string> files;
+    std::string resourcePath = Constant::resource;
+    if (!std::filesystem::exists(resourcePath))
+    {
+        return files;
+    }
+    for (auto entry : std::filesystem::directory_iterator(resourcePath))
+    {
+        std::string extension = entry.path().extension().string();
+        if (extension == Constant::ogg || extension == Constant::wav || extension == Constant::flac)
+        {
+            files.push_back(entry.path().filename().string());
+        }
+    }
+    std::sort(files.begin(), files.end());
+    return files;
 }
 
 void Application::handleAddSong()
 {
-    const std::string artist{Input::getString("  Artist       : ")};
-    const std::string filePath{Input::getString("  File path    : ")};
-    const std::string title{Input::getString("  Song title   : ")};
-    std::cout << "  Duration (sec): ";
-    const int duration{Input::getInt(3600, 1)};
-    playlistManager_.getActive()->addSong(Song{artist, duration, filePath, title});
+    auto files = displayResourceContent();
+    if (files.empty())
+    {
+        std::cout << Constant::noAudioFiles;
+        return;
+    }
+    std::cout << Constant::songsAvailable;
+    for (int index = 0; index < files.size(); index++)
+    {
+        std::cout << Constant::extraSpace << (index + 1) << Constant::dotAndSpace << files[index] << Constant::newLine;
+    }
+    std::cout << Constant::selectFileFrom << files.size() << Constant::toCancel;
+    int index = promptMenuChoice(files.size());
+    if (index == 0)
+    {
+        return;
+    }
+    std::string filePath = Constant::resourceSlash + files[index - 1];
+    for (auto song : playlistManager_.getActive()->getSongs())
+    {
+        if (song.getFilePath() == filePath)
+        {
+            std::cout << Constant::songExists;
+            return;
+        }
+    }
+    std::string title = std::filesystem::path(filePath).stem().string();
+    sf::Music music;
+    int duration = music.openFromFile(filePath) ? music.getDuration().asSeconds() : 0;
+    playlistManager_.getActive()->addSong(Song(duration, filePath, title));
     playlistManager_.saveAll();
-    std::cout << "  Song '" << title << "' added.\n";
+    std::cout << Constant::added << title << Constant::openingBracket << duration << Constant::newLineSecond;
 }
 
 void Application::handleCreatePlaylist()
 {
-    const std::string name{Input::getString("  Playlist name: ")};
+    std::string name = Input::readNonEmptyString(Constant::playlistName);
     try
     {
         playlistManager_.createPlaylist(name);
         playlistManager_.saveAll();
-        std::cout << "  Playlist '" << name << "' created.\n";
+        std::cout << Constant::playlistText << name << Constant::createdText;
     }
-    catch (const std::exception &e)
+    catch (const std::exception &exception)
     {
-        std::cout << "  Error: " << e.what() << '\n';
+        std::cout << Constant::error << exception.what() << Constant::newLine;
     }
 }
 
 void Application::handleDeletePlaylist()
 {
     displayPlaylists();
-    if (playlistManager_.getAll().empty())
+    if (!playlistManager_.getAll().empty())
     {
-        return;
+        int size = playlistManager_.getAll().size();
+        std::cout << Constant::toDeletePlaylist << size << Constant::toCancel;
+        int choice = promptMenuChoice(size);
+        if (choice != 0)
+        {
+            playlistManager_.deletePlaylist(choice - 1);
+            std::cout << Constant::playlistDeleted;
+        }
     }
-    const int maximum{static_cast<int>(playlistManager_.getAll().size())};
-    std::cout << "  Select playlist to delete (1-" << maximum << ", 0 to cancel): ";
-    const int choice{promptMenuChoice(maximum)};
-    if (choice == 0)
-    {
-        return;
-    }
-    playlistManager_.deletePlaylist(choice - 1);
-    std::cout << "  Playlist deleted.\n";
 }
 
 void Application::handleMoveSong()
 {
-    Playlist *active{playlistManager_.getActive()};
-    if (active == nullptr || active->isEmpty())
+    Playlist *active = playlistManager_.getActive();
+    if (active != nullptr && !active->isEmpty())
     {
-        std::cout << "  No songs to move.\n";
-        return;
-    }
-    displaySongs();
-    const int maximum{static_cast<int>(active->size())};
-    std::cout << "  Song number to move (1-" << maximum << ", 0 to cancel): ";
-    const int idx{promptMenuChoice(maximum)};
-    if (idx == 0)
-    {
-        return;
-    }
-    std::cout << "  1. Move up   2. Move down   0. Cancel\n  Choice: ";
-    const int dir{promptMenuChoice(2)};
-    auto it{active->getSongs().begin()};
-    std::advance(it, idx - 1);
-    bool moved{false};
-    if (dir == 1)
-    {
-        moved = active->moveSongUp(it);
-    }
-    else if (dir == 2)
-    {
-        moved = active->moveSongDown(it);
-    }
-    if (moved)
-    {
-        playlistManager_.saveAll();
-        std::cout << "  Song moved.\n";
+        displaySongs();
+        int size = active->getSize();
+        std::cout << Constant::toMove << size << Constant::toCancel;
+        int index = promptMenuChoice(size);
+        if (index != 0)
+        {
+            std::cout << Constant::moveChoice;
+            int direction = promptMenuChoice(2);
+            auto iterator = active->getSongs().begin();
+            std::advance(iterator, index - 1);
+            bool moved = false;
+            if (direction == 1)
+            {
+                moved = active->moveSongUp(iterator);
+            }
+            else if (direction == 2)
+            {
+                moved = active->moveSongDown(iterator);
+            }
+            if (moved)
+            {
+                playlistManager_.saveAll();
+                std::cout << Constant::songMoved;
+            }
+            else
+            {
+                std::cout << Constant::cannotMove;
+            }
+        }
     }
     else
     {
-        std::cout << "  Cannot move further in that direction.\n";
+        std::cout << Constant::noSongs;
     }
 }
 
 void Application::handlePlayback()
 {
-    displayNowPlaying();
-    std::cout << "  1. Play    2. Pause    3. Resume\n"
-              << "  4. Stop    5. Next     6. Previous\n"
-              << "  0. Back\n"
-              << "  Choice: ";
-    const int choice{promptMenuChoice(6)};
-    Playlist *active{playlistManager_.getActive()};
-    switch (choice)
+    bool inMenu = true;
+    while (inMenu)
     {
-    case 1:
-    {
-        if (active != nullptr)
+        displayNowPlaying();
+        std::cout << Constant::playbackMenu;
+        int choice = promptMenuChoice(6);
+        Playlist *active = playlistManager_.getActive();
+        switch (choice)
         {
-            engine_.setPlaylist(active);
-            engine_.play();
-        }
-        else
+        case 1:
         {
-            std::cout << "  Select a playlist first.\n";
+            if (active != nullptr)
+            {
+                engine_.setPlaylist(active);
+                engine_.play();
+            }
+            else
+            {
+                std::cout << Constant::selectPlaylistFirst;
+            }
+            break;
         }
-        break;
-    }
-    case 2:
-        engine_.pause();
-        break;
-    case 3:
-        engine_.resume();
-        break;
-    case 4:
-        engine_.stop();
-        break;
-    case 5:
-        engine_.nextSong();
-        break;
-    case 6:
-        engine_.previousSong();
-        break;
-    case 0:
-        break;
-    default:
-        break;
+        case 2:
+            engine_.pause();
+            break;
+        case 3:
+            engine_.resume();
+            break;
+        case 4:
+            engine_.stop();
+            break;
+        case 5:
+            engine_.nextSong();
+            break;
+        case 6:
+            engine_.previousSong();
+            break;
+        case 0:
+            inMenu = false;
+            break;
+        default:
+            break;
+        }
     }
 }
 
 void Application::handleRemoveSong()
 {
-    Playlist *active{playlistManager_.getActive()};
-    if (active == nullptr || active->isEmpty())
+    Playlist *active = playlistManager_.getActive();
+    if (active != nullptr && !active->isEmpty())
     {
-        std::cout << "  No songs to remove.\n";
-        return;
+        displaySongs();
+        int size = static_cast<int>(active->getSize());
+        std::cout << Constant::toRemove << size << Constant::toCancel;
+        int index = promptMenuChoice(size);
+        if (index != 0)
+        {
+            auto iterator = active->getSongs().begin();
+            std::advance(iterator, index - 1);
+            active->removeSong(iterator);
+            playlistManager_.saveAll();
+            std::cout << Constant::songRemoved;
+        }
     }
-    displaySongs();
-    const int maximum{static_cast<int>(active->size())};
-    std::cout << "  Song number to remove (1-" << maximum << ", 0 to cancel): ";
-    const int idx{promptMenuChoice(maximum)};
-    if (idx == 0)
+    else
     {
-        return;
+        std::cout << Constant::noSongsToRemove;
     }
-    auto it{active->getSongs().begin()};
-    std::advance(it, idx - 1);
-    active->removeSong(it);
-    playlistManager_.saveAll();
-    std::cout << "  Song removed.\n";
 }
 
 void Application::handleSelectPlaylist()
 {
     displayPlaylists();
-    if (playlistManager_.getAll().empty())
+    if (!playlistManager_.getAll().empty())
     {
-        return;
-    }
-    const int maximum{static_cast<int>(playlistManager_.getAll().size())};
-    std::cout << "  Select (1-" << maximum << ", 0 to cancel): ";
-    const int choice{promptMenuChoice(maximum)};
-    if (choice == 0)
-    {
-        return;
-    }
-    if (playlistManager_.selectPlaylist(choice - 1))
-    {
-        engine_.setPlaylist(playlistManager_.getActive());
-        std::cout << "  Selected: " << playlistManager_.getActive()->getName() << '\n';
+        int size = playlistManager_.getAll().size();
+        std::cout << Constant::select << size << Constant::toCancel;
+        int choice = promptMenuChoice(size);
+        if (choice != 0)
+        {
+            if (playlistManager_.selectPlaylist(choice - 1))
+            {
+                engine_.setPlaylist(playlistManager_.getActive());
+                std::cout << Constant::selected << playlistManager_.getActive()->getName() << Constant::newLine;
+            }
+        }
     }
 }
 
 void Application::displayNowPlaying() const
 {
-    std::cout << "\n  Status: " << (engine_.isPlaying() ? "Playing" : "Stopped") << '\n';
+    std::cout << Constant::status << (engine_.isPlaying() ? Constant::isPlaying : Constant::isStopped) << Constant::newLine;
 }
 
 void Application::displayPlaylists() const
 {
-    const auto &all{playlistManager_.getAll()};
-    if (all.empty())
+    auto all = playlistManager_.getAll();
+    if (!all.empty())
     {
-        std::cout << "  No playlists yet.\n";
-        return;
+        std::cout << Constant::playlists;
+        for (int index = 0; index < all.size(); index++)
+        {
+            std::cout << Constant::extraSpace << (index + 1) << Constant::dotAndSpace << all[index].getName() << Constant::openingBracket << all[index].getSize() << Constant::songs;
+        }
     }
-    std::cout << "\n  Playlists:\n";
-    for (int i{0}; i < static_cast<int>(all.size()); ++i)
+    else
     {
-        std::cout << "    " << (i + 1) << ". " << all[i].getName() << "  (" << all[i].size() << " songs)\n";
+        std::cout << Constant::noPlaylists;
     }
 }
 
 void Application::displaySongs() const
 {
-    Playlist *active{playlistManager_.getActive()};
-    if (active == nullptr || active->isEmpty())
+    Playlist *active = playlistManager_.getActive();
+    if (active != nullptr && !active->isEmpty())
     {
-        std::cout << "  Playlist is empty.\n";
-        return;
+        std::cout << Constant::songsIn << active->getName() << Constant::newLineThird;
+        int index = 1;
+        for (auto song : active->getSongs())
+        {
+            std::cout << Constant::extraSpace << index++ << Constant::dotAndSpace << song.getTitle() << Constant::dash << song.getDuration() << Constant::newLineSecond;
+        }
     }
-    std::cout << "\n  Songs in '" << active->getName() << "':\n";
-    int i = 1;
-    for (const auto &song : active->getSongs())
+    else
     {
-        std::cout << "    " << i++ << ". " << song.getTitle() << " - " << song.getArtist() << "  (" << song.getDuration() << "s)\n";
+        std::cout << Constant::playlistIsEmpty;
     }
 }
 
 int Application::promptMenuChoice(const int maximum)
 {
-    return Input::getInt(maximum, 0);
+    return Input::readValidInteger(maximum, 0);
+}
+
+void Application::handleSearch()
+{
+    std::string userInput = Input::readNonEmptyString(Constant::search);
+    std::transform(userInput.begin(), userInput.end(), userInput.begin(), ::tolower);
+    if (playlistManager_.getActive() == nullptr)
+    {
+        searchInResource(userInput);
+    }
+    else
+    {
+        searchInPlaylist(userInput);
+    }
+}
+
+void Application::searchInResource(const std::string &userInput)
+{
+    auto allFiles = displayResourceContent();
+    std::vector<std::string> results;
+    for (auto file : allFiles)
+    {
+        std::string lower = file;
+        std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+        if (lower.find(userInput) != std::string::npos)
+        {
+            results.push_back(file);
+        }
+    }
+    if (!results.empty())
+    {
+        std::cout << Constant::searchResultTwo;
+        for (int index = 0; index < results.size(); index++)
+        {
+            std::cout << Constant::extraSpace << (index + 1) << Constant::dotAndSpace << std::filesystem::path(results[index]).stem().string() << Constant::newLine;
+        }
+        std::cout << Constant::selectToPlay << results.size() << Constant::toCancel;
+        int index = promptMenuChoice(results.size());
+        if (index != 0)
+        {
+            std::string filePath = Constant::resourceSlash + results[index - 1];
+            std::string title = std::filesystem::path(filePath).stem().string();
+            sf::Music music;
+            int duration = music.openFromFile(filePath) ? music.getDuration().asSeconds() : Constant::zero;
+            searchPlaylist_.getSongs().clear();
+            searchPlaylist_.addSong(Song(duration, filePath, title));
+            searchPlaylist_.setCurrent(searchPlaylist_.getSongs().begin());
+            engine_.setPlaylist(&searchPlaylist_);
+            engine_.play();
+            handlePlayback();
+        }
+    }
+    else
+    {
+        std::cout << Constant::noMatchingSong;
+    }
+}
+
+void Application::searchInPlaylist(const std::string &userInput)
+{
+    std::vector<std::list<Song>::iterator> results;
+    Playlist *active = playlistManager_.getActive();
+    for (auto iterator = active->getSongs().begin(); iterator != active->getSongs().end(); iterator++)
+    {
+        std::string lower = iterator->getTitle();
+        std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+        if (lower.find(userInput) != std::string::npos)
+        {
+            results.push_back(iterator);
+        }
+    }
+    if (!results.empty())
+    {
+        std::cout << Constant::searchResultTwo;
+        for (int index = 0; index < results.size(); index++)
+        {
+            std::cout << Constant::extraSpace << (index + 1) << Constant::dotAndSpace << results[index]->getTitle() << Constant::newLine;
+        }
+        std::cout << Constant::selectToPlay << results.size() << Constant::toCancel;
+        int index = promptMenuChoice(results.size());
+        if (index != 0)
+        {
+            active->setCurrent(results[index - 1]);
+            engine_.setPlaylist(active);
+            engine_.play();
+            handlePlayback();
+        }
+    }
+    else
+    {
+        std::cout << Constant::noMatchingSong;
+    }
 }

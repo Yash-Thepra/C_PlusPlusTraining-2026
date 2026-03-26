@@ -1,5 +1,6 @@
 #include <stdexcept>
 
+#include "Constant.h"
 #include "PlaylistManager.h"
 
 PlaylistManager::PlaylistManager(IFileManager &fileManager) : activeIndex_{-1}, fileManager_{fileManager}, nameIndex_{}, playlists_{}
@@ -10,23 +11,23 @@ void PlaylistManager::createPlaylist(const std::string &name)
 {
     if (nameIndex_.count(name) > 0)
     {
-        throw std::invalid_argument("Playlist '" + name + "' already exists.");
+        throw std::invalid_argument(Constant::playlistText + name + Constant::exists);
     }
     playlists_.emplace_back(name);
-    nameIndex_[name] = static_cast<int>(playlists_.size()) - 1;
+    nameIndex_[name] = static_cast<int>(playlists_.size()) - Constant::one;
 }
 
 void PlaylistManager::deletePlaylist(const int index)
 {
-    const int size{static_cast<int>(playlists_.size())};
+    int size = playlists_.size();
     if (index < 0 || index >= size)
     {
-        throw std::out_of_range("Invalid playlist index.");
+        throw std::out_of_range(Constant::invalidIndex);
     }
     playlists_.erase(playlists_.begin() + index);
     if (activeIndex_ == index)
     {
-        activeIndex_ = -1;
+        activeIndex_ = -Constant::one;
     }
     else if (activeIndex_ > index)
     {
@@ -50,13 +51,17 @@ bool PlaylistManager::saveAll()
 
 bool PlaylistManager::selectPlaylist(const int index)
 {
-    const int size{static_cast<int>(playlists_.size())};
+    bool result = true;
+    int size = playlists_.size();
     if (index < 0 || index >= size)
     {
-        return false;
+        result = false;
     }
-    activeIndex_ = index;
-    return true;
+    else
+    {
+        activeIndex_ = index;
+    }
+    return result;
 }
 
 int PlaylistManager::getActiveIndex() const
@@ -66,7 +71,7 @@ int PlaylistManager::getActiveIndex() const
 
 Playlist *PlaylistManager::getActive() const
 {
-    const int size{static_cast<int>(playlists_.size())};
+    int size = playlists_.size();
     if (activeIndex_ < 0 || activeIndex_ >= size)
     {
         return nullptr;
@@ -86,19 +91,19 @@ const std::vector<Playlist> &PlaylistManager::getAll() const
 
 Playlist *PlaylistManager::findByName(const std::string &name)
 {
-    auto it{nameIndex_.find(name)};
-    if (it == nameIndex_.end())
+    auto iterator = nameIndex_.find(name);
+    if (iterator == nameIndex_.end())
     {
         return nullptr;
     }
-    return &playlists_[it->second];
+    return &playlists_[iterator->second];
 }
 
 void PlaylistManager::rebuildIndex()
 {
     nameIndex_.clear();
-    for (int i{0}; i < static_cast<int>(playlists_.size()); ++i)
+    for (int index = 0; index < playlists_.size(); index++)
     {
-        nameIndex_[playlists_[i].getName()] = i;
+        nameIndex_[playlists_[index].getName()] = index;
     }
 }

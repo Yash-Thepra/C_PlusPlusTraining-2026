@@ -4,17 +4,11 @@
 
 int main()
 {
-    FileManager fileManager{"playlists.txt"};
-
-    PlaybackEngine engine{};
-
-    IFileManager &fm{fileManager};
-
-    IPlaybackEngine &pe{engine};
-
-    Application app{fm, pe};
-
+    FileManager fileManager(Constant::playlistTxt);
+    PlaybackEngine engine;
+    IFileManager &manager(fileManager);
+    IPlaybackEngine &playback(engine);
+    Application app(manager, playback);
     app.run();
-
     return 0;
 }
